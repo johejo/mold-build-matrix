@@ -1,0 +1,48 @@
+name: build
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: buildjet-8vcpu-ubuntu-2204
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - context: archlinux
+            build-args: |
+              TOOLCHAIN_PACKAGE=gcc
+              CMAKE_GENERATOR=Ninja
+              CMAKE_GENERATOR_PACKAGE=ninja
+              CMAKE_C_COMPILER=/usr/bin/gcc
+              CMAKE_CXX_COMPILER=/usr/bin/g++
+          - context: archlinux
+            build-args: |
+              TOOLCHAIN_PACKAGE=gcc
+              CMAKE_GENERATOR=Unix Makefiles
+              CMAKE_GENERATOR_PACKAGE=make
+              CMAKE_C_COMPILER=/usr/bin/gcc
+              CMAKE_CXX_COMPILER=/usr/bin/g++
+          - context: archlinux
+            build-args: |
+              TOOLCHAIN_PACKAGE=clang
+              CMAKE_GENERATOR=Ninja
+              CMAKE_GENERATOR_PACKAGE=ninja
+              CMAKE_C_COMPILER=/usr/bin/clang
+              CMAKE_CXX_COMPILER=/usr/bin/clang++
+          - context: archlinux
+            build-args: |
+              TOOLCHAIN_PACKAGE=clang
+              CMAKE_GENERATOR=Unix Makefiles
+              CMAKE_GENERATOR_PACKAGE=make
+              CMAKE_C_COMPILER=/usr/bin/clang
+              CMAKE_CXX_COMPILER=/usr/bin/clang++
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/setup-buildx-action@v2
+      - uses: docker/build-push-action@v4
+        with:
+          context: ${{ matrix.context }}
+          build-args: ${{ matrix.build-args }}
